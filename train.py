@@ -14,6 +14,8 @@ from torch.utils.data import DataLoader
 from utils.dataloader import efficientdet_dataset_collate, EfficientdetDataset
 from nets.efficientdet import EfficientDetBackbone
 from nets.efficientdet_training import Generator, FocalLoss
+from nets.RepulsionLoss.multibox_loss import MultiBoxLoss
+from nets.RepulsionLoss.repulsion_loss import RepulsionLoss
 from tqdm import tqdm
 
 from functools import wraps
@@ -23,7 +25,15 @@ init_model_path =  './logs/Epoch42-Total_Loss0.2806-Val_Loss0.1099.pth'
 if not init_model_path:
     init_model_path = "./weights/efficientdet-d0.pth"
 
+loss = 'Focal_Loss'
 
+Loss_ = {
+    'Focal_Loss': FocalLoss,
+    'MultiBox_Loss': MultiBoxLoss,
+    'Repulsion_Loss': RepulsionLoss
+}
+
+criteria = Loss_[loss]
 
 def _curent_time():
     date = datetime.now()
@@ -174,7 +184,7 @@ def train():
         cudnn.benchmark = True
         net = net.cuda()
 
-    efficient_loss = FocalLoss()
+    efficient_loss = criteria()
 
     # 0.1用于验证，0.9用于训练
     val_split = 0.1
