@@ -2,6 +2,7 @@ import math
 import torch
 from torch.autograd import Variable
 from bbox_transform import bbox_transform_inv, bbox_overlaps
+# https://github.com/dongdonghy/repulsion-loss-faster-rcnn-pytorch/blob/master/lib/model/faster_rcnn/repulsion_loss.py
 
 def IoG(box_a, box_b):                                                                                             
     inter_xmin = torch.max(box_a[0], box_b[0])                                                                     
@@ -78,21 +79,22 @@ def RepBox(pred_boxes, gt_rois, rois_inside_ws):
     return loss_repbox
 				   
 def repulsion(rois, box_deltas, gt_rois, rois_inside_ws, rois_outside_ws):                                             
-														   
+
+
     deltas = Variable(box_deltas.view(rois.shape[0],256,4))                                                        
     rois_inside_ws = Variable(rois_inside_ws.view(rois.shape[0],256,4))                                            
     rois_outside_ws = Variable(rois_outside_ws.view(rois.shape[0],256,4))                                          
     if int(torch.sum(rois_outside_ws==rois_inside_ws))!=1024:                                                      
-	import pdb                                                                                                 
-	pdb.set_trace() 
+        import pdb
+        pdb.set_trace()
 
     for i in range(rois.shape[0]):
-	deltas[i] = deltas[i].view(-1, 4) * torch.FloatTensor((0.1, 0.1, 0.2, 0.2)).cuda()+ \   #cfg
-                     torch.FloatTensor((0.0, 0.0, 0.0, 0.0)).cuda()
+        deltas[i] = deltas[i].view(-1, 4) * torch.FloatTensor((0.1, 0.1, 0.2, 0.2)).cuda()+ \
+                     torch.FloatTensor((0.0, 0.0, 0.0, 0.0)).cuda()          #cfg
 
     pred_boxes = bbox_transform_inv(rois[:,:,1:5], deltas, 2)
 
-    loss_repgt = RepGT(pred_boxes, gt_rois, rois_inside_ws)
-    loss_repbox = RepBox(pred_boxes, gt_rois, rois_inside_ws)
+    loss_RepGT = RepGT(pred_boxes, gt_rois, rois_inside_ws)
+    loss_RepBox = RepBox(pred_boxes, gt_rois, rois_inside_ws)
 
-    return loss_repgt, loss_repbox
+    return loss_RepGT, loss_RepBox
