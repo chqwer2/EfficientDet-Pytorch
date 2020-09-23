@@ -145,7 +145,9 @@ class FocalLoss(nn.Module):
             if cuda:
                 zeros = zeros.cuda()
             cls_loss = torch.where(torch.ne(targets, -1.0), cls_loss, zeros)
-            classification_losses.append(cls_loss.sum() / torch.clamp(num_positive_anchors.to(dtype), min=1.0))
+            classification_losses.append(cls_loss.sum() / torch.clamp(num_positive_anchors.to(dtype), min=1.0))   # cross_entropy ??
+
+
             # smoooth_l1
             if positive_indices.sum() > 0:
                 targets = encode_bbox(assigned_annotations, positive_indices, anchor_widths, anchor_heights, anchor_ctr_x, anchor_ctr_y)
